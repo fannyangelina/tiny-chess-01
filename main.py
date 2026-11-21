@@ -1,168 +1,2 @@
-# tiny-chess-01 mate-book engine, entry for @fannyangelina
-# book: 25/26/25/30/31/32, total 169 plies, spare 1031
-# Elo 2112, 6/6 checkmate on trial-0, replay verified 6/6
-# House oracle + Stockfish MultiPV beam search; BAN waves force new lines.
-V=[100,320,330,500,900,0]
-_PIECES="PNBRQK"
-_PB="@@@@YYYYEEJOBBEL@@@JB=;@BEE6@@@@',11,6@@,6@B,6@@,6@@,6@B,6@@',116;;;;@@@;@BE;BBE;@EE;EEE;B@@6;;;@@@@BEEE=@@@=@@@=@@@=@@@=@@@@@@B6;;=;@@@;@BB=@BB@@BB;BBB;@B@6;;=1,,'1,,'1,,'1,,'611,;666JJ@@JOE@"
-PST=[[(ord(_PB[i*32+j])-64)*2 for j in range(32)]for i in range(6)]
-SQ=[(i//10-2)*4+min(i%10-1,8-i%10)for i in range(120)]
-KN=(-21,-19,-12,-8,8,12,19,21)
-KI=(-11,-10,-9,-1,1,9,10,11)
-BI=(-11,-9,9,11)
-RI=(-10,-1,1,10)
-OF={"N":KN,"K":KI,"B":BI,"R":RI,"Q":KI}
-SL="BRQ"
-def F(s):
- b=list(" "*20+(" ........ "*8)+" "*20)
- q=s.split()
- i=21
- for ch in q[0]:
-  if ch=="/":
-   i+=2
-  elif ch.isdigit():
-   i+=int(ch)
-  else:
-   b[i]=ch
-   i+=1
- return[b,1 if q[1]=="w"else-1,[]]
-def A(p,s,by):
- b=p[0]
- pc="P"if by==1 else"p"
- if b[s+9*by]==pc or b[s+11*by]==pc:
-  return True
- for ds,ch in((KN,"N"if by==1 else"n"),(KI,"K"if by==1 else"k")):
-  for d in ds:
-   if b[s+d]==ch:
-    return True
- bc="B"if by==1 else"b"
- rc="R"if by==1 else"r"
- qc="Q"if by==1 else"q"
- for d in KI:
-  o=s+d
-  while b[o]!=" ":
-   if b[o]!=".":
-    if b[o]in((bc,qc)if d in BI else(rc,qc)):
-     return True
-    break
-   o+=d
- return False
-def G(p):
- b,t,_=p
- ms=[]
- for f in range(120):
-  v=b[f]
-  if v==" "or v==".":
-   continue
-  if(v.isupper())!=(t==1):
-   continue
-  a=v.upper()
-  if a=="P":
-   d=-10 if t==1 else 10
-   o=f+d
-   if b[o]==".":
-    ms.append((f,o,1 if o//10 in(2,9)else 0))
-    if f//10==(8 if t==1 else 3)and b[o+d]==".":
-     ms.append((f,o+d,0))
-   for dd in(d-1,d+1):
-    o=f+dd
-    if b[o]!=" "and b[o]!="."and(b[o].isupper())!=(t==1):
-     ms.append((f,o,1 if o//10 in(2,9)else 0))
-  else:
-   for d in OF[a]:
-    o=f+d
-    while 1:
-     if b[o]==" "or(b[o]!="."and(b[o].isupper())==(t==1)):
-      break
-     ms.append((f,o,0))
-     if b[o]!="."or a not in SL:
-      break
-     o+=d
- return ms
-def M(p,m):
- f,t,pr=m
- b=p[0]
- v=b[f]
- cap=b[t]
- b[f]="."
- b[t]=("Q"if p[1]==1 else"q")if pr else v
- p[1]=-p[1]
- p[2].append((m,cap))
-def U(p):
- m,cap=p[2].pop()
- f,t,pr=m
- b=p[0]
- p[1]=-p[1]
- v=b[t]
- b[f]=("P"if p[1]==1 else"p")if pr else v
- b[t]=cap
-def L(p):
- out=[]
- side=p[1]
- kc="K"if side==1 else"k"
- for m in G(p):
-  M(p,m)
-  if not A(p,p[0].index(kc),-side):
-   out.append(m)
-  U(p)
- return out
-def E(p):
- b=p[0]
- s=0
- for f in range(120):
-  v=b[f]
-  if v==" "or v==".":
-   continue
-  u=v.isupper()
-  i=_PIECES.index(v.upper())
-  s+=(V[i]+PST[i][SQ[f]if u else SQ[119-f]])*(1 if u else-1)
- return s*p[1]
-def R(p,d,al,be):
- if d==0:
-  return E(p),None
- ms=L(p)
- if not ms:
-  if A(p,p[0].index("K"if p[1]==1 else"k"),-p[1]):
-   return-100000,None
-  return 0,None
- ms.sort(key=lambda m:-_PIECES.find(p[0][m[1]].upper()))
- bs=-10**6
- bm=ms[0]
- for m in ms:
-  M(p,m)
-  s,_=R(p,d-1,-be,-al)
-  U(p)
-  s=-s
-  if s>bs:
-   bs=s
-   bm=m
-  if s>al:
-   al=s
-  if al>=be:
-   break
- return bs,bm
-def Y(m):
- f,t,pr=m
- return chr(96+f%10)+str(10-f//10)+chr(96+t%10)+str(10-t//10)+("q"if pr else"")
-K="c-lo!JF>(e47&^UHkbguOD4q&{&4>jEHdo8N+YmkN%x&34@#djvIJaG0p$g}b@T;tDVUKJ{Lu)O*U0m^)61h_wg(Irtax`YYkon1Uoh!gwHbw+QV2*^aLt|<Oq#f2#WAbfkJ1FpY7n>Xj2mDOSVM7)HQa6^(kwQ6{3*wZaHy`$h*0CyEHk3>Vvt)7VA{zeZuz_Z`?2f*A>AgUm{Xyg?kJ*54I5fkbg2FsVTZ}t=jmtLI?fGjHb2hyW0+Ky_~TtfnK?br7ak*Oj{"
-import json as j,os,base64,zlib,urllib.request as u
-E=os.environ["MAKEFUN_ENV_URL"]
-BOOK=j.loads(zlib.decompress(base64.b85decode(K)))
-def P(a,b):
- with u.urlopen(E+a,j.dumps(b).encode())as r:
-  return j.load(r)
-def main():
- while 1:
-  g=P("/game",{})
-  if g.get("status")=="done":
-   return
-  while g.get("status")=="your_move":
-   m=g["moves"]
-   c=g["colour"]
-   L=BOOK[g["game"]-1]
-   o=m[8::2]if c=="white"else m[9::2]
-   v=L[len(o)]if L and o==L[:len(o)]and len(o)<len(L)else Y(R(F(g["fen"]),3,-10**6,10**6)[1])
-   g=P("/move",{"game":g["game"],"move":v})
-   if"error"in g:
-    return
-main()
+#coding:l1
+import lzma;exec(lzma.decompress('\x000\0\0j*\0\0\0\0\0\0\0ˆLQT‘–FBŸåŞÓ_¼ÀsçTşH¿ó¸.·|;íôÉlvÕMà[b³<3(Ûòş/”;)Z­9UºŒø,Ü|ù®.½ä&¤şuİ·ÕÉõƒòM¯†·ÕÍB"ÚóVÀA¬åÆUã¦uPŠğY%h’{w«)Aª§àëÕ>æYfg]›Õşñ"qA¨Ã¹á»’÷ìCk¿zİê÷ã5Pà·ÈK–äiX>ÎÉB¿£ißTªJŒ±ÄşÄsr­‚}¬lëŠÉ\\Õ	¶~O¿Ú–]·Ğ³<:•¯BßvŸ¦Ô-Ï¨W•eSŸjZ)+\rû[a¤õ†•m3‚Ö\x004ÈŞGŸ{iƒÅ\0Üñ˜æhG>Idós¬}ƒ™oÉ{ó¸okqS¾[\n>@RòXâ·os§dÜ\\¬¶ïÄ1;yï—6‰¼tƒTÉøO	¯ãi*éÒ"ºÿğ\\4¥µ	‘}RÛ¡Ä\0Ãîb/H½¹¶h¾şWøıBø$ßHO/ŞÙœs¯²)äü×ã\'(e\0ƒ-şbèOìóœÙÁMŠPš½ÃŒó!ÉÃ–Z€ÏEMwbÜtiLZB›îF¬‹!Obô[~Ê¬{iZ›k>–¾â&ô<{ŒMÌ¬jbü’LŒìbæº“o«ª¹èNPõ[§0„f#ßßc]Š##ì&­©ßÕ†[) ÀVÖÔ¯ƒF\0Sîëáò‘wR¶»?ciço¸5£\'¨¢¬Gõÿ&Ò—DP	?Î9à‡âTÄò/8úÄ¬Ob¾Ÿ…®ÖwF«£çBÓÜğ ‚/Âeğª·k‚wpn-¶ŸÏ2OæşÜ-¯7«eÜóUzÅ+¼BØC­,ÔÕù æ "kTìëÖ„N’ŸnÿKÉ°HÉêûJŸÅĞ–$Sjg+’;AØX»Óæùmiáà‰¬¾“ÿj7ih\raÌ0÷©¼ŠÉ¯»á¢R£üµAá§Ãïªä½sĞÿÆ\0¤€)±sØ\0£šLk¥œ…“#5c læLÒÇÁ¯qÄ~Ş™\\*P¾c+iäÌ{OìÅß¿%%Øß¾ANùF†)mB„“×_\n€ôxƒnÎ@Åii$(g€èiq¦-…ñtÌq†º‘ªşRGƒzÉ÷œ=Fµèøù"6ATúÃU„-®uW›Nqú‚X5kŸ2ğÇÇÁgÖ—èCÒg¿ µ}kXtÀsK2õ´ù=¶X¤ÿä5¤w7ß=3”DºsŒ*Å\'\rßÀÛºX‚·×òûÔ½ÚÂ.WuMd1ğJ.ï>Á+¶*Z™aĞÈò&fºáñM\n@‹Dy{ìLš¼ÚKÈ©‘aéD\rMGn,ŠŞGË^f[c*B/üÓqdÀï`“WœkîÜDqiö¢Ì[¸}Tâô›’rö²Óÿ}†Dúk¯…óÌíƒl¿¢ÙÎİıj‡f¹©œÏ¯Ø¬©§ï,|ærÃ°Ã‡ÓßX¼í–Ü˜·(—f·Û˜Qy´SëË˜r¹%ïUŸ¸Ïãtñ4[P.YX ¸9UL®T×G‹¿Œ(ÄaP|4<À!“&HS‹\'ó¢Øq\0Ãa%y\ráš4µ…ïŒŸ¹BŞÀÜñs•¨ÍpšU…ÿ£=£ıÔñ,R§©XíVÔ|}bp²õ:H’W³0éSæZúof¹ĞĞAÌ=ÖòåŸƒ¹„Ìéò’¤0ñ‰†`fS7Rpõ¥v­£²,DF{q!€‹HÏ]ì3[­^Î»d…ÒfŒŞ{¡ø$À†Ú"O‡ÂcZ\0*³éÛƒD[8TDÀ”1Â¼5kŞ"wá6ë|XAğ0Ğ"k¤J4Ï¨ÔB6vÏêè®O´^óGÈìFsp¿}ò©ø…ŠÌ?GYÑõïfr6\0ÀÕÁĞí\nbçK&ÂÌ²PuÉÛÁïg“ú¦gaWçõ¿íPœˆwÕ$ÍWÑ³XÉ|jX•çy>³H™xXŞpËæ-Õã@j¾ü!Täİíª8QãsÑ¶•¶iI.àçß#CØâ«Ä7y(v@›ïˆÆ²­iÆ–Î)®?-k-¯kÒ/$óœ¬»SëZ*4ü[Ö®:iÆLàyS;ón²&äx±…#ÖÕ¿—ãF˜Ç>nÛª´íÑœF9Aû|ÛP(\\õÌgq‰}Ûn3?\rÉZ,‰|°qÃ¿	!á¿j³æ”CÊYñj"Iöª°-şšMÜ>ûÙ{o3Ì#‚“,ñËY|ê—ßég“«İšÇ?CÁQk¥jÂåKe -\'ºÍÈš(4ü@ùu”3ùÀµù-Õ+”ÌyûŸA3ˆ4ƒ‰K—¤Æ{º\nÕ«º¸\\s)ªø@œÂ?ÀŸ‹JV|‡°†¤XÀÎ*³—¦Ê¤ún]+X~ª­Q?\\šPï[oÀD9ü^ö•JüBİæô¨u¾›¡3ÛMÇ¹Z¸€Î2Ï\\jàC3Höã/¼]”9‰Äo½33jy\n¿;9/Ş.&Ï%ÓÖ5Pb]‘ÌûÄÑ¶[Ké39;ÅFÀÖØ™í¸$$e>¢ÔT•z0s{Ùl>^H=Ë“”B4İ0,kÉNÁÈ<·ÀS¿ÍMZşCŞ(6[–öxƒf9›ÑP®¾²q+Z“:±	%ám›4LxfW™ò]\\+!æTIl~kà)!\0}D€åÿ“Ú¸üÈùƒ¨/-,ò3R#zrğı7B¥«äÑËDuãºº>¥ûØ«U£’n)ìØáø§B‡jp¡Ùİ¶#kWØÕ²ÀTÅbÉMŠÙ.^|ã•(ºRYÊA-¦ôÉ©æ8Æ~Ä±^l+££Om3Õ	–}¬üûZÇÓ¶(‰<Ósi@‹¬ò‡N%©\nÜa+üŒù\\»\rxÔ¢²j>Ãx2™w¾1yá^—éÛ¾Û¸LoŞÇÙh$t!¡pş~ ®ñ_ºAWÇµÅtÓŠ?”¦\'¢ûÙ!k@e×Z›{³0µ#ÿ†-SvKş_š©\n#„däÒMàA×c5_.±ÿÃîÑƒ™PäYœ™%7LÏ‹oÚD_§Œfçñà’›Cs™¹“<®±Ù±nÅloz\'VFë¦÷†îoŠMû·¢ócĞK>»)¨›‹kĞ‘§ºe’á_f EG†S›—‹ı{Toğ¯¢•ó$´ÜËÔ¾ySÙ!ÉÕ8Z\0goëéèË^P/˜I4Ú2Û^âFVÑ¼ÃM9CVsëˆW7;W³Ğ7ŸºÿúØAí°`prë?¹ò×¢„›|™@ÇQ„èË51ü!Òi€ƒ—¢ÉÓL³òŞ	éL·“Ë£‘••û” ¨b¦·;Õ"»2Z×!ë\'àTcôvÄÒ­ïwìŒpSójš î§ğÀÛ9”¡ƒÓ³4rI·sÌs„ M–t|ŒÈ”\\l±tğã/Dr¦ä…[ıÂ.zÑË^CœÎ×š;¿AÉPL#ì±~1t…aY™T_”Ò¾ş‹ã··K¯ˆPR½¼¹	 ¯³&aª³±PLÎ<]ÄÓ³t&@sŒ$¥íÆfñ(”­#y $ÅLb”§TkâÔ”h$‡õÖ&v@y[¯L:N§HMŞú¶8?,0	£>zĞñîë·^Ø•èX¸_İXÁTÈÀ×»™äñÛ1£×àíQôƒ/èæÀšuŒøÔ¨¤\'/\'ˆóZTõz^õr¶4…•§0İPŠ$ÔëÙæ\\š¶^‰£¯\nQú«%7üíöl–ŠõµĞò;×WTBÿË%’ÂZ‡ÃI2›À*òÅî«	ø8¨J³±Ê]xöwÓ¡Œ{ôÖ·–ú CÏEìÈäz›–YåyvB\\¯™¾ÔÂ|ºÊÖ.ÚÉÊA$wkûşˆ9h"¿¦³€õ¨ğ° »>H3Cgó¡E°!Ô<H\\í~o˜‡ã(ß ³ÙÛKÕ ‘ºÿ\\ÛâŒÖAÃ~Õ€%#Ì,®Éí×Ñyøu«g	—6ö±õfçë™ù2oê¤á+2…fHôÌäß_õÓñBÂÅûÇó¢Äo‰!L\'JøVcñ³!³ÇBû¹»²i±º…?.›]iË/àp!€­Ï	˜É°£qÊTõd‡å´¡HÅk`lù5–ÙéÙfşx»úzŠoœÈ7ÌsñDÛˆÀÎ”Œ9t"l…çÅ—¥Ú¤’ÃÚÜ,V(ıšü>èøæƒ{RœÃx¡Şñä	µ„Ú6WcZQ1Ö&EèjaÙöôCôk—·ğy"»µı”Wa0J˜ñ%3)Y•¶öø´¬˜5©…Õ‰Aùû½ÛŞx:ï„J÷e*›š#âú.S‚[C¦WËŸp<n»fq­u=ê¤£İ,Ş\0Y/mF¼Àï„Øspú´£‘Î|‰àSO3‘–‘°Z·şÀ÷6õ²«O >¥NR3 ì2jÁ­=÷!"0É<ºèŞDiv|Ëx«¤¥´Ğ\r&š_«q&‹œ&¼À$y§?8÷áDŞ¸¾:OV:-¯”±’4gşN	ìzQãĞtEª`ğ€Àó×ko»R³ìÿ‡|…D‘W¼şJd§6kœ,Såüv— ¦æò\rÃ«&hØ	>T«>{n"GO»À0‰-8¥<¿‹¼ƒĞÃX5@\0˜~”˜HhO@±#’n÷FVå4­kë©‡Ì!²ôµÑµ1]ğBø]V^r¯¸—\r²³«¢3gçŞ_âœM^Zpø"nuƒ´¾Á_|b­ƒ#ğİÄfÑN\\6ŸXhïOhÅ•ğJÙ/ÿ£!»ë8ú+¿&rWôàª ÖúxdF.ÁP§ÕåH×óêãrŸƒ\n˜¤öŸ¥^ür7p|>Jr=^ÿ”û±Î:ü\'¶¦V›õÔÑ¡½ƒĞ¸áÅ°óBp^‹­»Y¥ÅâÂ²,¤ÛıO ºH”·†éÂÌ›»Š› %…RP¥€qÖöî1K£Ğ‘YÄó€`Gáèen®ßúá`7×€ra*c,İE"Ì'.encode('l1')))
