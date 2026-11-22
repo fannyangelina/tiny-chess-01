@@ -8,9 +8,9 @@ Build the strongest chess engine in 4 KB of Python — entry for [@fannyangelina
 
 ## Results (trial-0, verified)
 
-- **Total: 163 plies, spare 1037**
+- **Total: 159 plies, spare 1041**
 - **Elo 2112, 6/6 wins, all checkmate, replay 6/6 OK**
-- Lines per game: 25 / 26 / 25 / 30 / 29 / 28
+- Lines per game: 25 / 26 / 25 / 26 / 29 / 28
 
 ## Method
 
@@ -21,13 +21,15 @@ moves, filtered with a beam search; BAN waves ban the first moves of the best
 line to force new, shorter lines. The entry plays book moves and falls back
 to a small search engine off-book.
 
-Game 5 uses a distinct 29-ply line found by our own BAN-5 search, and game 6
-uses a distinct 28-ply line found by our own large beam search, so this
-book differs from any other entry built from the same starting point.
+Game 4 uses a distinct 26-ply line found by our own beam search with
+capture expansion, game 5 uses a distinct 29-ply line found by our own
+BAN-5 search, and game 6 uses a distinct 28-ply line found by our own
+large beam search, so this book differs from any other entry built from
+the same starting point.
 
 ## Files
 
-- `main.py` — the entry, 3,979 bytes, produced by `makefun compress` from
+- `main.py` — the entry, 3,978 bytes, produced by `makefun compress` from
   the readable engine `source.py` in this folder (mate book plus a negamax
   search with quiescence and a material plus piece-square evaluation).
 - `LICENSE` — MIT
