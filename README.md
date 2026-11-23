@@ -8,9 +8,9 @@ Build the strongest chess engine in 4 KB of Python — entry for [@fannyangelina
 
 ## Results (trial-0, verified)
 
-- **Total: 151 plies, spare 1049**
+- **Total: 149 plies, spare 1051**
 - **Elo 2112, 6/6 wins, all checkmate, replay 6/6 OK**
-- Lines per game: 25 / 26 / 23 / 26 / 25 / 26
+- Lines per game: 25 / 26 / 23 / 26 / 23 / 26
 
 ## Method
 
@@ -27,16 +27,15 @@ line at move 4), game 3 uses a distinct 23-ply line found by our own rebeam sear
 a forced f3h4 prefix with the f5g7 move banned (the continuation differs
 from the 19-ply line in the same basin from move 4 onward), game 4 uses a
 distinct 26-ply line found by our own beam search with
-capture expansion, game 5 uses a distinct 25-ply line found by our own
-rebeam search (e2e4 f3e5 c3e2 e2f4 g2g3 f4h5 h5g7 d1h5 h5f7; a knight-tour
-line that diverges from the 27-ply line at move 2),
-and game 6 uses a distinct 28-ply line found by our own
-large beam search, so this book differs from any other entry built from
-the same starting point.
+capture expansion, and game 5 uses a distinct 23-ply line found by our own
+rebeam search from an alternative basin with the old line's first move
+banned (e2e4 d1c2 e4e5 a2a4 f3g5 h2h4 c2g6 g5e6; diverges from the 25-ply
+line at move 6 and from the 27-ply line at move 4), so this book differs
+from any other entry built from the same starting point.
 
 ## Files
 
-- `main.py` — the entry, 3,967 bytes, produced by `makefun compress` from
+- `main.py` — the entry, 3,955 bytes, produced by `makefun compress` from
   the readable engine `source.py` in this folder (mate book plus a negamax
   search with quiescence and a material plus piece-square evaluation).
 - `LICENSE` — MIT
