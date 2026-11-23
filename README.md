@@ -8,9 +8,9 @@ Build the strongest chess engine in 4 KB of Python — entry for [@fannyangelina
 
 ## Results (trial-0, verified)
 
-- **Total: 149 plies, spare 1051**
+- **Total: 145 plies, spare 1055**
 - **Elo 2112, 6/6 wins, all checkmate, replay 6/6 OK**
-- Lines per game: 25 / 26 / 23 / 26 / 23 / 26
+- Lines per game: 25 / 26 / 19 / 26 / 23 / 26
 
 ## Method
 
@@ -23,9 +23,8 @@ to a small search engine off-book.
 
 Game 6 uses a distinct 26-ply line found by our own rebeam search
 (h7h5 f8e7 h5h4 f6g4 g4h2 e7h4 d8h4 h4h3 h3h1; diverges from the 28-ply
-line at move 4), game 3 uses a distinct 23-ply line found by our own rebeam search from
-a forced f3h4 prefix with the f5g7 move banned (the continuation differs
-from the 19-ply line in the same basin from move 4 onward), game 4 uses a
+line at move 4), game 3 uses a 19-ply line found by our own beam5 search
+from scratch (f3h4 h4f5 d1f3 f5g7 f3f7 g7f5), game 4 uses a
 distinct 26-ply line found by our own beam search with
 capture expansion, and game 5 uses a distinct 23-ply line found by our own
 rebeam search from an alternative basin with the old line's first move
